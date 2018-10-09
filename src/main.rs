@@ -30,7 +30,7 @@ fn main() {
     GLOBAL.reset();
     GLOBAL.set_limit(1150);
     let result = std::panic::catch_unwind(|| {
-        // panic!("fuck");
+        // panic!("flup");
         let a = 10.0;
         let b = 2.0;
         let c = 4.0;
@@ -38,7 +38,7 @@ fn main() {
     });
 
     if result.is_err() {
-        println!("fuck2");
+        println!("flup2");
     }
 
     if result.is_ok() {
