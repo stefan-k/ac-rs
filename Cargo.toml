@@ -1,0 +1,19 @@
+[package]
+name = "ac"
+version = "0.0.0"
+authors = ["Stefan Kroboth <stefan.kroboth@gmail.com>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "AC"
+documentation = "https://stefan-k.github.io/ac-rs/ac/"
+homepage = "https://github.com/stefan-k/ac-rs"
+repository = "https://github.com/stefan-k/ac-rs"
+readme = "README.md"
+keywords = ["optimization", "science", "HPC"]
+categories = ["science"]
+exclude = [ 
+	".travis.yml",
+	"push_docs",
+]
+
+[dependencies]
