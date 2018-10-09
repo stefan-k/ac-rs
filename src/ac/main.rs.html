@@ -82,7 +82,7 @@
     <span class="ident">GLOBAL</span>.<span class="ident">reset</span>();
     <span class="ident">GLOBAL</span>.<span class="ident">set_limit</span>(<span class="number">1150</span>);
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">panic</span>::<span class="ident">catch_unwind</span>(<span class="op">||</span> {
-        <span class="comment">// panic!(&quot;fuck&quot;);</span>
+        <span class="comment">// panic!(&quot;flup&quot;);</span>
         <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="number">10.0</span>;
         <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="number">2.0</span>;
         <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="number">4.0</span>;
@@ -90,7 +90,7 @@
     });
 
     <span class="kw">if</span> <span class="ident">result</span>.<span class="ident">is_err</span>() {
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;fuck2&quot;</span>);
+        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;flup2&quot;</span>);
     }
 
     <span class="kw">if</span> <span class="ident">result</span>.<span class="ident">is_ok</span>() {
