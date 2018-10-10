@@ -18,6 +18,7 @@ pub struct LimitedAllocator<T: GlobalAlloc> {
     allocator: T,
     mem: AtomicU64,
     limit: AtomicU64,
+    maximum: AtomicU64,
     aborting: AtomicBool,
 }
 
@@ -31,15 +32,19 @@ fn abort_hook(_l: Layout) {
 unsafe impl<T: GlobalAlloc> GlobalAlloc for LimitedAllocator<T> {
     unsafe fn alloc(&self, l: Layout) -> *mut u8 {
         let ls = l.size() as u64;
-        let old = self.mem.fetch_add(ls, Ordering::SeqCst);
+        let old = self.mem.fetch_add(l.size() as u64, Ordering::SeqCst);
+        let sum = old + ls;
+
+        self.maximum.fetch_max(sum, Ordering::SeqCst);
 
         if !self.aborting.load(Ordering::SeqCst) {
-            if old + ls > self.limit.load(Ordering::SeqCst) {
+            if sum > self.limit.load(Ordering::SeqCst) {
                 self.aborting.store(true, Ordering::SeqCst);
                 let np: *const u8 = std::ptr::null();
                 return np as *mut u8;
             }
         }
+
         self.allocator.alloc(l)
     }
 
@@ -55,6 +60,7 @@ impl<T: GlobalAlloc> LimitedAllocator<T> {
             allocator: a,
             mem: AtomicU64::new(0),
             limit: AtomicU64::new(std::u64::MAX),
+            maximum: AtomicU64::new(0),
             aborting: AtomicBool::new(false),
         }
     }
@@ -62,6 +68,7 @@ impl<T: GlobalAlloc> LimitedAllocator<T> {
     pub fn reset(&self) {
         std::alloc::set_alloc_error_hook(abort_hook);
         self.mem.store(0, Ordering::SeqCst);
+        self.maximum.store(0, Ordering::SeqCst);
         self.aborting.store(false, Ordering::SeqCst);
     }
 
@@ -71,5 +78,13 @@ impl<T: GlobalAlloc> LimitedAllocator<T> {
 
     pub fn set_limit(&self, limit: u64) {
         self.limit.store(limit, Ordering::SeqCst);
+    }
+
+    pub fn limit(&self) -> u64 {
+        self.limit.load(Ordering::SeqCst)
+    }
+
+    pub fn max(&self) -> u64 {
+        self.maximum.load(Ordering::SeqCst)
     }
 }
