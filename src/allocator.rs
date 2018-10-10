@@ -33,16 +33,13 @@ unsafe impl<T: GlobalAlloc> GlobalAlloc for LimitedAllocator<T> {
         let ls = l.size() as u64;
         let old = self.mem.fetch_add(ls, Ordering::SeqCst);
 
-        // if !self.aborting.load(Ordering::SeqCst) {
-        if old + ls > self.limit.load(Ordering::SeqCst) {
-            // self.aborting.store(true, Ordering::SeqCst);
-            self.reset();
-            // panic!("oom");
-            // std::alloc::handle_alloc_error(l)
-            let np: *const u8 = std::ptr::null();
-            return np as *mut u8;
+        if !self.aborting.load(Ordering::SeqCst) {
+            if old + ls > self.limit.load(Ordering::SeqCst) {
+                self.aborting.store(true, Ordering::SeqCst);
+                let np: *const u8 = std::ptr::null();
+                return np as *mut u8;
+            }
         }
-        // }
         self.allocator.alloc(l)
     }
 
