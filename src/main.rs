@@ -13,49 +13,57 @@
 #![feature(atomic_min_max)]
 #![feature(alloc_error_hook)]
 #![feature(allocator_api)]
+#![feature(deadline_api)]
 
+// #[macro_use]
+// extern crate failure;
+extern crate libc;
 extern crate rand;
 
 mod allocator;
+// #[macro_use]
+// mod errors;
+mod executor;
+
 use self::allocator::LimitedAllocator;
-use rand::{thread_rng, Rng};
+use self::executor::run_with_limits;
 use std::alloc::System;
+use std::time::Duration;
 
 #[global_allocator]
-static GLOBAL: LimitedAllocator<System> = LimitedAllocator::new(System);
+pub static GLOBAL: LimitedAllocator<System> = LimitedAllocator::new(System);
 
 #[inline(never)]
 fn dummy(a: f64, b: f64, c: f64) -> u64 {
-    let mut rng = thread_rng();
-    let n: u64 = rng.gen_range(1, 100);
+    // use rand::{thread_rng, Rng};
+    // let mut rng = thread_rng();
+    // let n: u64 = rng.gen_range(1, 100);
+    // let v: Vec<f64> = Vec::with_capacity(50);
+    let n = 0;
     let time = (a * b - c - (b - a) * a).abs() as u64 + n;
-    std::thread::sleep(std::time::Duration::from_millis(time));
+    std::thread::sleep(Duration::from_millis(time));
     time
 }
 
 fn main() {
-    GLOBAL.reset();
-    GLOBAL.set_limit(10000);
-
-    {
+    let f = || {
         let a = 10.0;
         let b = 2.0;
         let c = 4.0;
         let t = dummy(a, b, c);
-        println!(
-            "Time: {:?} ms; Maximum mem usage: {} / {} bytes; Remaining mem: {} bytes",
-            t,
-            GLOBAL.max(),
-            GLOBAL.limit(),
-            GLOBAL.get(),
-        );
-    }
-    println!(
-        "AFTER BLOCK: Maximum mem usage: {} / {} bytes; Remaining mem: {} bytes",
-        GLOBAL.max(),
-        GLOBAL.limit(),
-        GLOBAL.get(),
-    );
+        t
+    };
+
+    let stats = run_with_limits(f, Duration::from_millis(96), 1000);
+    println!("{:?}", stats);
+
+    // println!(
+    //     "Time: {:?} ms; Maximum mem usage: {} / {} bytes; Remaining mem: {} bytes",
+    //     stats.time,
+    //     stats.max_memory,
+    //     GLOBAL.limit(),
+    //     GLOBAL.get(),
+    // );
 
     // let result = std::panic::catch_unwind(|| {
     //     // panic!("flup");
