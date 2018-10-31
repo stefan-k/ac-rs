@@ -20,3 +20,4 @@ exclude = [
 rand = "*"
 libc = "*"
 failure = "*"
+state = { version = "*", features = ["tls", "const_fn"] }
