@@ -44,6 +44,19 @@ struct Configuration {
     x3: f64,
 }
 
+pub static mut AC_STATE: bool = true;
+
+// #[macro_export]
+macro_rules! ac {
+    ($var:ident =>  $default:expr) => {
+        if unsafe { AC_STATE } {
+            CONFIG.get().$var
+        } else {
+            $default
+        }
+    };
+}
+
 #[inline(never)]
 fn dummy(a: f64) -> u64 {
     // use rand::{thread_rng, Rng};
@@ -51,8 +64,8 @@ fn dummy(a: f64) -> u64 {
     // let n: u64 = rng.gen_range(1, 100);
     // let v: Vec<f64> = Vec::with_capacity(50);
     let n = 0;
-    let c = CONFIG.get().x2;
-    let b = CONFIG.get().x3;
+    let c = ac!(x2 => 4.0);
+    let b = ac!(x3 => 2.0);
     let time = (a * b - c - (b - a) * a).abs() as u64 + n;
     std::thread::sleep(Duration::from_millis(time));
     time
@@ -65,8 +78,13 @@ fn main() {
         x3: 2.0,
     });
 
+    unsafe {
+        AC_STATE = true;
+    }
+
     let f = || {
-        let a = CONFIG.get().x1;
+        // let a = if AC_STATE { CONFIG.get().x1 } else { 10.0 };
+        let a = ac!(x1 => 1.0);
         let t = dummy(a);
         t
     };
