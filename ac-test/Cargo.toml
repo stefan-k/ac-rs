@@ -1,0 +1,9 @@
+[package]
+name = "ac-test"
+version = "0.0.0"
+authors = ["Stefan Kroboth <stefan.kroboth@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+ac = { path = "../" }
+state = { version = "*", features = ["tls", "const_fn"] }
