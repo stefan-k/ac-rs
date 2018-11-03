@@ -11,7 +11,7 @@
 //! https://www.reddit.com/r/rust/comments/8z83wc/is_there_any_way_to_benchmark_memory_usage_in_rust/e2h4dp9
 
 use std::alloc::{GlobalAlloc, Layout};
-use std::io::Write;
+// use std::io::Write;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 pub struct LimitedAllocator<T: GlobalAlloc> {
@@ -23,10 +23,10 @@ pub struct LimitedAllocator<T: GlobalAlloc> {
 }
 
 fn abort_hook(_l: Layout) {
-    std::io::stderr()
-        .write(b"Memory limit exceeded!\n")
-        .unwrap();
-    panic!("oh no")
+    // std::io::stderr()
+    //     .write(b"Memory limit exceeded!\n")
+    //     .unwrap();
+    // panic!("oh no")
 }
 
 unsafe impl<T: GlobalAlloc> GlobalAlloc for LimitedAllocator<T> {
@@ -37,13 +37,13 @@ unsafe impl<T: GlobalAlloc> GlobalAlloc for LimitedAllocator<T> {
 
         self.maximum.fetch_max(sum, Ordering::SeqCst);
 
-        if !self.aborting.load(Ordering::SeqCst) {
-            if sum > self.limit.load(Ordering::SeqCst) {
-                self.aborting.store(true, Ordering::SeqCst);
-                let np: *const u8 = std::ptr::null();
-                return np as *mut u8;
-            }
-        }
+        // if !self.aborting.load(Ordering::SeqCst) {
+        //     if sum > self.limit.load(Ordering::SeqCst) {
+        //         self.aborting.store(true, Ordering::SeqCst);
+        //         let np: *const u8 = std::ptr::null();
+        //         return np as *mut u8;
+        //     }
+        // }
 
         self.allocator.alloc(l)
     }

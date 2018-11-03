@@ -35,10 +35,10 @@ use std::alloc::System;
 
 #[cfg(feature = "on")]
 #[global_allocator]
-pub static GLOBAL: LimitedAllocator<System> = LimitedAllocator::new(System);
+pub static ALLOCATOR: LimitedAllocator<System> = LimitedAllocator::new(System);
 
 #[cfg(not(feature = "on"))]
-pub static GLOBAL: FakeAllocator = FakeAllocator {};
+pub static ALLOCATOR: FakeAllocator = FakeAllocator {};
 
 #[cfg(feature = "on")]
 #[macro_export]

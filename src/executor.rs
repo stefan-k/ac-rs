@@ -9,7 +9,7 @@
 
 // use crate::errors::*;
 // use failure::Error;
-use crate::GLOBAL;
+use crate::ALLOCATOR;
 use libc::pthread_cancel;
 use std::os::unix::thread::JoinHandleExt;
 use std::sync::mpsc::{channel, RecvTimeoutError};
@@ -19,7 +19,7 @@ use std::time::{Duration, Instant};
 #[derive(Debug)]
 pub enum AcStatus {
     Success,
-    // MemoryLimitExceeded,
+    MemoryLimitExceeded,
     TimeLimitExceeded,
     TargetAlgorithmPanic,
     TargetAlgorithmSpawnFail,
@@ -56,8 +56,8 @@ where
     let time: Duration;
     let mut output: Option<T> = None;
 
-    GLOBAL.reset();
-    GLOBAL.set_limit(memory_limit);
+    ALLOCATOR.reset();
+    ALLOCATOR.set_limit(memory_limit);
 
     let (tx, rx) = channel();
     let builder = thread::Builder::new();
@@ -78,13 +78,19 @@ where
                     match join_handle.join() {
                         Ok((elapsed_time, res)) => {
                             // Everything is fine!
-                            max_memory = GLOBAL.max();
+                            max_memory = ALLOCATOR.max();
+                            // But lets check the memory limit! -- Once panic==unwind in the
+                            // allocator, this can be done smarter, by stopping the execution right
+                            // away!
+                            if max_memory > memory_limit {
+                                status = AcStatus::MemoryLimitExceeded;
+                            }
                             time = elapsed_time;
                             output = Some(res);
                         }
                         Err(_) => {
                             // There was a panic in the target algorithm
-                            max_memory = GLOBAL.max();
+                            max_memory = ALLOCATOR.max();
                             time = Duration::from_millis(0);
                             status = AcStatus::TargetAlgorithmPanic;
                         }
@@ -92,7 +98,7 @@ where
                 }
                 Err(RecvTimeoutError::Timeout) => {
                     // Ran out of time
-                    max_memory = GLOBAL.max();
+                    max_memory = ALLOCATOR.max();
                     time = time_limit;
                     status = AcStatus::TimeLimitExceeded;
 
@@ -104,7 +110,7 @@ where
                 }
                 Err(RecvTimeoutError::Disconnected) => {
                     // Channel disconnected, something bad happend!
-                    max_memory = GLOBAL.max();
+                    max_memory = ALLOCATOR.max();
                     time = Duration::from_millis(0);
                     status = AcStatus::TargetAlgorithmCommunicationFail;
 
@@ -117,7 +123,7 @@ where
             }
         }
         Err(_) => {
-            max_memory = GLOBAL.max();
+            max_memory = ALLOCATOR.max();
             time = Duration::from_millis(0);
             status = AcStatus::TargetAlgorithmSpawnFail;
         }

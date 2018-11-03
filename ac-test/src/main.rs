@@ -50,7 +50,7 @@ fn main() {
         t
     };
 
-    let stats = run_with_limits(f, Duration::from_millis(97), 10000);
+    let stats = run_with_limits(f, Duration::from_millis(97), 100);
     println!("{:?}", stats);
 
     // println!(
